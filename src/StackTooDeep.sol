@@ -46,9 +46,51 @@ contract StackTooDeep {
     }
 
 
-  ReserveData public reserveData;
+  ReserveData internal _reserveData;
+
+    function getReserveData() external view returns (ReserveData memory) {
+        return _reserveData;
+    }
 
     function setReserveData(ReserveData calldata newReserveData) external {
-        reserveData = newReserveData;
+        ReserveData storage data = _reserveData;
+        
+        // Use scoped blocks to limit variable lifetime and process fields in batches to avoid stack too deep
+        // Batch 1: Process first 3 fields
+        {
+            data.configuration = newReserveData.configuration;
+            data.liquidityIndex = newReserveData.liquidityIndex;
+            data.currentLiquidityRate = newReserveData.currentLiquidityRate;
+        }
+        
+        // Batch 2: Process next 3 fields
+        {
+            data.variableBorrowIndex = newReserveData.variableBorrowIndex;
+            data.currentVariableBorrowRate = newReserveData.currentVariableBorrowRate;
+            data.deficit = newReserveData.deficit;
+        }
+        
+        // Batch 3: Process next 3 fields
+        {
+            data.lastUpdateTimestamp = newReserveData.lastUpdateTimestamp;
+            data.id = newReserveData.id;
+            data.liquidationGracePeriodUntil = newReserveData.liquidationGracePeriodUntil;
+        }
+        
+        // Batch 4: Process next 3 fields
+        {
+            data.aTokenAddress = newReserveData.aTokenAddress;
+            data.__deprecatedStableDebtTokenAddress = newReserveData.__deprecatedStableDebtTokenAddress;
+            data.variableDebtTokenAddress = newReserveData.variableDebtTokenAddress;
+        }
+        
+        // Batch 5: Process last 5 fields
+        {
+            data.__deprecatedInterestRateStrategyAddress = newReserveData.__deprecatedInterestRateStrategyAddress;
+            data.accruedToTreasury = newReserveData.accruedToTreasury;
+            data.virtualUnderlyingBalance = newReserveData.virtualUnderlyingBalance;
+            data.isolationModeTotalDebt = newReserveData.isolationModeTotalDebt;
+            data.__deprecatedVirtualUnderlyingBalance = newReserveData.__deprecatedVirtualUnderlyingBalance;
+        }
     }
 }
